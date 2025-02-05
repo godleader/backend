@@ -22,16 +22,18 @@ export const searchSheets = async (req, res) => {
     }
 
     // Initialize Google Sheets API client with service account credentials
+    const serviceAccountKey = Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8');
     const auth = new google.auth.GoogleAuth({
-      keyFile: 'GOOGLE_CREDENTIALS_BASE64', // <-- Update with your service account file path
+      credentials: JSON.parse(serviceAccountKey),
       scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
     });
 
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: authClient });
 
+
     // Spreadsheet configuration
-    const spreadsheetId = process.env.SPREADSHEET_ID;
+    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
     const range = 'Sheet1!A1:Z1000'; // Adjust range as needed
 
     // Retrieve data from the spreadsheet
