@@ -60,7 +60,7 @@ router.get('/', (req, res) => {
 });
 //router.use(auth.verifyToken);
 
-router.post('/users/login', userController.login);
+router.post('/api/users/login', userController.login);
 
 
 
@@ -71,7 +71,7 @@ router.post('/accounts', userController.createAccount);
 router.get('/accounts/:id', userController.showAccount);
 router.patch('/accounts/:id', userController.updateAccount);
 router.delete('/accounts/:id', userController.deleteAccount);
-router.get('/users/:id/walletBalance', auth.verifyToken, userController.getWalletBalance);
+router.get('/api/users/:id/walletBalance', auth.verifyToken, userController.getWalletBalance);
 router.post('/upload', upload.single('file'), (req, res) => {
   res.status(200).send(req.file);
 });
