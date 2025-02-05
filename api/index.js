@@ -20,7 +20,7 @@ app.use(morgan('dev')); // Use morgan for request logging – invaluable for deb
 
 // CORS configuration (essential for allowing cross-origin requests)
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production' ? 'https://fronts-three.vercel.app' : 'http://localhost:5173', // Replace with your frontend URL
+  origin: process.env.NODE_ENV === 'production' ? 'https://frontend-swart-nu-63.vercel.app' : 'http://localhost:5173', // Replace with your frontend URL
   methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
   allowedHeaders: 'Content-Type,Authorization', // Add other headers as needed
   credentials: true // Important if you're using cookies or sessions
