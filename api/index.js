@@ -38,7 +38,7 @@ const corsOptions = {
   credentials: true,
 };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Mount route modules – you can change the base paths as necessary
 app.use('/', userRoutes);
