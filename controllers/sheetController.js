@@ -1,4 +1,7 @@
 // controllers/sheetController.js
+import dotenv from 'dotenv';
+dotenv.config();
+
 import { google } from 'googleapis';
 
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
