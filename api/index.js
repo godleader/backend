@@ -27,12 +27,23 @@ const corsOptions = {
   credentials: true // Important if you're using cookies or sessions
 };
 */
-app.use(cors());
 
-// Routes – Improved and more RESTful
-app.use('/', userRoutes, sheetRoutes ); // More RESTful: /users for user-related routes
-//app.use('/', sheetRoutes); // More descriptive: /sheets for sheet-related routes
-// app.use('/users/wallet', walletRoutes);  // If wallet is under users, keep this
+
+const corsOptions = {
+  origin: process.env.NODE_ENV === 'production'
+    ? 'https://frontend-swart-nu-63.vercel.app'
+    : 'http://localhost:5173',
+  methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+  allowedHeaders: 'Content-Type,Authorization',
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
+
+// Mount route modules – you can change the base paths as necessary
+app.use('/', userRoutes);
+app.use('/', sheetRoutes);
+// app.use('/users/wallet', wal
 
 // Removed the generic '/' route to prevent conflicts.  Create a specific route for UI.
 app.get('/', (req, res) => {  // Example UI route.  Consider a separate /ui route.
