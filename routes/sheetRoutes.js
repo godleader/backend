@@ -7,7 +7,7 @@ import cors from 'cors';
 const router = express.Router();
 
 // Apply CORS middleware properly.
-router.use(cors());
+router.use(cors())
 
 // Optionally, protect the route using verifyToken.
 // The order of middleware is important: verifyToken will run before the controller.

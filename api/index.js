@@ -25,7 +25,7 @@ const corsOptions = {
   allowedHeaders: 'Content-Type,Authorization', // Add other headers as needed
   credentials: true // Important if you're using cookies or sessions
 };
-app.use(cors(corsOptions)); // Use the cors middleware *with* the options
+app.use(cors())// Use the cors middleware *with* the options
 
 // Routes – Improved and more RESTful
 app.use('/api', userRoutes); // More RESTful: /users for user-related routes
