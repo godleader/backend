@@ -28,8 +28,8 @@ const corsOptions = {
 app.use(cors(corsOptions)); // Use the cors middleware *with* the options
 
 // Routes – Improved and more RESTful
-app.use('/users', userRoutes); // More RESTful: /users for user-related routes
-app.use('/sheets', sheetRoutes); // More descriptive: /sheets for sheet-related routes
+app.use('/api', userRoutes); // More RESTful: /users for user-related routes
+app.use('/search', sheetRoutes); // More descriptive: /sheets for sheet-related routes
 // app.use('/users/wallet', walletRoutes);  // If wallet is under users, keep this
 
 // Removed the generic '/' route to prevent conflicts.  Create a specific route for UI.

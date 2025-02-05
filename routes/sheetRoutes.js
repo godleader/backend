@@ -11,6 +11,6 @@ router.use(cors());
 
 // Optionally, protect the route using verifyToken.
 // The order of middleware is important: verifyToken will run before the controller.
-router.post("/search", verifyToken, search);
+router.post("/sheets", verifyToken, search);
 
 export default router;
