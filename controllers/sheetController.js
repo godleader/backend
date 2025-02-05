@@ -1,106 +1,64 @@
-// controllers/sheetController.js
-import dotenv from 'dotenv';
-dotenv.config();
+// controllers/searchController.js
 
-import { google } from 'googleapis';
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 
+// Load configuration from environment variables (or your config)
 const SPREADSHEET_ID = process.env.GOOGLE_SPREADSHEET_ID;
-const SHEET_NAME = process.env.GOOGLE_SHEET_NAME || 'Sheet1';
+const SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+const PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY && process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n');
 
-let sheets;
+// You can change this if your data is on a different sheet
+const SHEET_INDEX = 0;
 
-// Google Sheets API setup (using base64 encoded JSON)
-const credentialsBase64 = process.env.GOOGLE_CREDENTIALS_BASE64;
-
-if (!credentialsBase64) {
-  throw new Error('GOOGLE_CREDENTIALS_BASE64 environment variable is not set.');
-}
-
-try {
-  const credentialsJson = JSON.parse(
-    Buffer.from(credentialsBase64, 'base64').toString('utf8')
-  );
-  const auth = new google.auth.GoogleAuth({ credentials: credentialsJson });
-  sheets = google.sheets({ version: 'v4', auth });
-} catch (error) {
-  console.error('Error parsing Google credentials:', error);
-  throw new Error('Invalid Google credentials.');
-}
-
-/**
- * Endpoint to search data from the spreadsheet.
- * Expects a JSON body with { keyword, country, searchType }.
- */
 export const search = async (req, res) => {
-  const { keyword, country, searchType } = req.body;
-
-  if (!keyword || !searchType) {
-    return res.status(400).json({ error: "Missing keyword or search type" });
-  }
-
   try {
-    const rows = await getSpreadsheetData();
-    const results = searchData(rows, keyword, searchType, country);
+    // Extract search parameters. You can also get these from req.query if you use GET.
+    const { name, phone, idcard } = req.body;
+    
+    // Validate that at least one search parameter is provided
+    if (!name && !phone && !idcard) {
+      return res.status(400).json({ error: 'Please provide at least one search parameter (name, phone, or idcard).' });
+    }
+    
+    // Initialize the Google Spreadsheet instance
+    const doc = new GoogleSpreadsheet(SPREADSHEET_ID);
+    await doc.useServiceAccountAuth({
+      client_email: SERVICE_ACCOUNT_EMAIL,
+      private_key: PRIVATE_KEY,
+    });
+    await doc.loadInfo(); // loads document properties and worksheets
 
-    if (results.length === 0) {
-      return res.status(404).json({ message: "No matching records found" });
+    // Access the desired sheet (first sheet by default)
+    const sheet = doc.sheetsByIndex[SHEET_INDEX];
+    const rows = await sheet.getRows(); // get all rows in the sheet
+
+    // Search the rows.
+    // For this example we assume that the spreadsheet has column headers named exactly "name", "phone", and "idcard".
+    // We use case-insensitive partial matching.
+    const matchedRows = rows.filter(row => {
+      let isMatch = true;
+      if (name) {
+        // Ensure the row has a "name" column and compare (case-insensitive, partial match)
+        isMatch = isMatch && row.name && row.name.toLowerCase().includes(name.toLowerCase());
+      }
+      if (phone) {
+        isMatch = isMatch && row.phone && row.phone.includes(phone);
+      }
+      if (idcard) {
+        isMatch = isMatch && row.idcard && row.idcard.includes(idcard);
+      }
+      return isMatch;
+    });
+
+    // If no matches found, return a 404 error
+    if (!matchedRows.length) {
+      return res.status(404).json({ error: 'No matching records found.' });
     }
 
-    res.json(results);
+    // Return the matched rows (if you only expect one record, you could return matchedRows[0])
+    return res.status(200).json({ data: matchedRows });
   } catch (error) {
-    console.error("Error during search:", error);
-    res.status(500).json({ error: "Search failed" });
+    console.error('Error in searchData controller:', error);
+    return res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 };
-
-/**
- * Fetches data from the Google Spreadsheet.
- */
-async function getSpreadsheetData() {
-  try {
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId: SPREADSHEET_ID,
-      range: `${SHEET_NAME}!A:Z`,
-    });
-    return response.data.values || [];
-  } catch (error) {
-    console.error("Error fetching spreadsheet data:", error);
-    throw error;
-  }
-}
-
-/**
- * Searches the sheet rows for the given keyword in the specified column.
- * Optionally filters the results by country if provided.
- */
-function searchData(rows, keyword, searchType, country) {
-  if (!keyword) return [];
-
-  const lowerCaseKeyword = keyword.toLowerCase();
-
-  if (rows.length === 0) return [];
-  
-  const headers = rows[0];
-  const searchColumnIndex = headers.indexOf(searchType);
-
-  if (searchColumnIndex === -1) {
-    return [];
-  }
-
-  let filteredRows = rows.slice(1).filter((row) => {
-    const cellValue = row[searchColumnIndex];
-    return cellValue && cellValue.toLowerCase().includes(lowerCaseKeyword);
-  });
-
-  if (country) {
-    const countryIndex = headers.indexOf("country");
-    if (countryIndex !== -1) {
-      filteredRows = filteredRows.filter((row) => {
-        const cellCountry = row[countryIndex];
-        return cellCountry && cellCountry.toLowerCase() === country.toLowerCase();
-      });
-    }
-  }
-
-  return filteredRows;
-}
