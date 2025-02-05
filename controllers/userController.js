@@ -147,7 +147,6 @@ export const login = async (req, res, next) => {
     });
   }
 };
-
 // 获取用户的钱包余额
 export const getWalletBalance = async (req, res) => {
   try {

@@ -19,16 +19,18 @@ app.use(express.json());
 app.use(morgan('dev')); // Use morgan for request logging – invaluable for debugging
 
 // CORS configuration (essential for allowing cross-origin requests)
+/*
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' ? 'https://frontend-swart-nu-63.vercel.app' : 'http://localhost:5173', // Replace with your frontend URL
   methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
   allowedHeaders: 'Content-Type,Authorization', // Add other headers as needed
   credentials: true // Important if you're using cookies or sessions
 };
-app.use(cors())// Use the cors middleware *with* the options
+*/
+app.use(cors());
 
 // Routes – Improved and more RESTful
-app.use('/', userRoutes); // More RESTful: /users for user-related routes
+app.use('/api', userRoutes); // More RESTful: /users for user-related routes
 app.use('/search', sheetRoutes); // More descriptive: /sheets for sheet-related routes
 // app.use('/users/wallet', walletRoutes);  // If wallet is under users, keep this
 
@@ -48,5 +50,5 @@ app.get('/', (req, res) => {  // Example UI route.  Consider a separate /ui rout
 });
 
 
-const PORT = process.env.PORT || 3000; // Provide a default port (3000)
+const PORT = process.env.PORT
 app.listen(PORT, () => console.log(`Server is Running on Port ${PORT}`));
