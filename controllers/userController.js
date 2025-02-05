@@ -1,19 +1,13 @@
+// 导入环境变量并进行配置
 import dotenv from 'dotenv';
+dotenv.config();
+
+// 导入依赖
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { PrismaClient } from '@prisma/client';
 
-
-//import User from '../models/userModel.js';
-//import LoginHistory from '../models/LoginHistory.js';
-//import TransactionHistory from '../models/TransactionHistory.js';
-//import TopUpHistory from '../models/TopUpHistory.js';
-//import SearchHistory from '../models/SearchHistory.js';
-import generateToken from '../utils/generateToken.js';
 const prisma = new PrismaClient();
-dotenv.config();
-
-const JWT_SECRET = process.env.JWT_SECRET || 'asdfghjiklhmnbo1234f54%';
 
 // 列出所有账户（带分页）
 export const listAccounts = async (req, res) => {
@@ -34,7 +28,6 @@ export const listAccounts = async (req, res) => {
     // 设置响应头，暴露自定义 header
     res.header('Access-Control-Expose-Headers', 'X-Total-Count');
     res.header('X-total-count', totalCount);
-
     res.status(200).json(data);
   } catch (error) {
     console.log(error);
@@ -152,33 +145,5 @@ export const login = async (req, res, next) => {
     res.status(500).json({
       error: "Internal server error",
     });
-  }
-};
-
-
-export const getWalletBalance = async (req, res) => {
-  try {
-    // Extract the user ID from the URL parameters
-    const userId = parseInt(req.params.id, 10);
-
-    if (isNaN(userId)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-
-    // Query the database to find the user's wallet balance
-    const user = await prisma.account.findUnique({
-      where: { id: userId },
-      select: { walletBalance: true }, // Only retrieve walletBalance
-    });
-
-    // Check if user exists
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    return res.status(200).json({ walletBalance: user.walletBalance });
-  } catch (error) {
-    console.error('Error fetching wallet balance:', error);
-    return res.status(500).json({ message: 'Internal server error' });
   }
 };
