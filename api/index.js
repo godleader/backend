@@ -1,49 +1,46 @@
-// index.js
 import express from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+import connectDb from '../db.js';
 import cors from 'cors';
-import connectDb from '../db.js'; // if needed
 dotenv.config();
 
-// Import your routes
 import userRoutes from '../routes/userRoutes.js';
-import sheetRoutes from '../routes/sheetRoutes.js';
+//import router from '../routes/accountRoutes.js';
+import searchRoutes from '../routes/searchRoutes.js';
 import walletRoutes from '../routes/walletRoutes.js';
-// import searchRoutes from '../routes/searchRoutes.js'; // if applicable
+import sheetRoutes from '../routes/sheetRoutes.js';
 
 const app = express();
-// connectDb(); // Uncomment if you are using database connection
+//connectDb();
 
-// Parse JSON bodies from incoming requests.
 app.use(express.json());
+//app.use(morgan('dev'));
 
-// Configure CORS with options
+/**
+ * Configure CORS.
+ * Replace 'http://your-client-domain.com' with the actual URL (including port) of your frontend.
+ * If you want to allow multiple origins, you can use a function to check the incoming origin.
+ */
+/**
 const corsOptions = {
-  origin:
-    process.env.NODE_ENV === 'production'
-      ? 'https://fronts-three.vercel.app'
-      : 'http://localhost:5173',
+  origin: process.env.NODE_ENV === 'production' ? 'https://fronts-three.vercel.app' : 'http://localhost:5173',
   methods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
   allowedHeaders: 'Content-Type,Authorization',
   credentials: true,
-  optionsSuccessStatus: 200,
+  optionsSuccessStatus: 200
 };
-app.use(cors(corsOptions));
+ */
+app.use(cors);
 
-// Mount your routes. Note the order:
-// 1. The sheet routes mounted at /api/users (this will handle /api/users/search)
-app.use('/api/users', sheetRoutes);
+// Mount routes
+app.use('/', userRoutes);
+//app.use('/api/users', userRoutes);
+app.use("/api/users", sheetRoutes);
 
-// 2. Mount wallet routes if needed.
 app.use('/api/users/wallet', walletRoutes);
 
-// 3. Other routes – ensure these do not conflict with the above.
-// For example, if userRoutes has a catch-all for "/", it might conflict with the above.
-// Adjust the mount paths as needed.
-app.use('/', userRoutes);
-
-// A simple HTML UI for the root endpoint.
+// Simple HTML UI for the root endpoint
 app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
