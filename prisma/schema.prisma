@@ -15,5 +15,5 @@ model account {
   role          String?  @db.VarChar(16)
   date_created  String   @default(dbgenerated("TO_CHAR(NOW() :: DATE, 'YYYY-MM-DD')"))
   time_created  String   @default(dbgenerated("TO_CHAR(NOW() :: TIME, 'HH24:MI:SS')"))
-  walletBalance Decimal  @default(0.0) @db.Decimal(20, 2)
+  walletBalance Float    @default(0.0)
 }

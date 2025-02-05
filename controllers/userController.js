@@ -147,3 +147,30 @@ export const login = async (req, res, next) => {
     });
   }
 };
+
+// 获取用户的钱包余额
+export const getWalletBalance = async (req, res) => {
+  try {
+    // 假设用户 ID 通过 URL 参数传入
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    // 从数据库中仅选择 walletBalance 字段
+    const account = await prisma.account.findUnique({
+      where: { id: userId },
+      select: { walletBalance: true },
+    });
+
+    if (!account) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // 返回钱包余额
+    res.status(200).json({ walletBalance: account.walletBalance });
+  } catch (error) {
+    console.error('Error fetching wallet balance:', error);
+    res.status(500).json({ message: 'Error fetching wallet balance' });
+  }
+};
