@@ -12,13 +12,18 @@ import { google } from 'googleapis';
  */
 export const searchSheets = async (req, res) => {
   try {
-    // Extract payload variables; currently only `name` is used for filtering.
+    // Extract payload variables; using country, searchType, and keyword.
     const { country, searchType, keyword } = req.body;
 
-    // Validate the required parameter `name`
+    // Validate required parameters
     if (!keyword) {
       return res.status(400).json({
         message: "Missing required parameter: keyword.",
+      });
+    }
+    if (!searchType) {
+      return res.status(400).json({
+        message: "Missing required parameter: searchType.",
       });
     }
 
@@ -38,7 +43,7 @@ export const searchSheets = async (req, res) => {
 
     // Spreadsheet configuration
     const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    const range = 'Sheet1!A1:Z1000'; // 根据实际情况调整范围
+    const range = 'Sheet1!A1:Z1000'; // Adjust the range as needed
 
     // Retrieve data from the spreadsheet
     const response = await sheets.spreadsheets.values.get({
@@ -53,16 +58,27 @@ export const searchSheets = async (req, res) => {
 
     // Assume the first row contains headers: name, mobile, idCard
     const headers = rows[0];
-    const nameIndex = headers.indexOf('name');
 
-    if (nameIndex === -1) {
-      return res.status(500).json({ message: 'Spreadsheet is missing required header "name".' });
+    // Determine which column to search based on the provided searchType
+    let columnIndex;
+    if (searchType === 'name') {
+      columnIndex = headers.indexOf('name');s
+    } else if (searchType === 'mobile') {
+      columnIndex = headers.indexOf('mobile');
+    } else if (searchType === 'idCard') {
+      columnIndex = headers.indexOf('idCard');
+    } else {
+      return res.status(400).json({ message: "Invalid searchType provided." });
     }
 
-    // Filter rows: search in the "name" column using case-insensitive matching
+    if (columnIndex === -1) {
+      return res.status(500).json({ message: `Spreadsheet is missing the required header for ${searchType}.` });
+    }
+
+    // Filter rows: search in the specified column using case-insensitive matching with the provided keyword.
     const filteredResults = rows.slice(1).filter((row) => {
-      const rowName = row[nameIndex] || '';
-      return rowName.toLowerCase().includes(name.toLowerCase());
+      const cellValue = row[columnIndex] || '';
+      return cellValue.toLowerCase().includes(keyword.toLowerCase());
     });
 
     return res.status(200).json({ data: filteredResults });
