@@ -1,48 +1,52 @@
 import { google } from 'googleapis';
 
-/**
- * Searches a Google Spreadsheet for rows matching the provided keyword, country, and searchType.
- *
- * Expected POST body:
- * {
- *   "keyword": "some keyword",
- *   "country": "USA",
- *   "searchType": "exampleType"
- * }
- */
 export const searchSheets = async (req, res) => {
   try {
-    // Extract payload variables; using country, searchType, and keyword.
+    const SHEET_ID_CN = process.env.GOOGLE_SPREADSHEET_ID_COUNTRY_CN;
+    const SHEET_ID_US = process.env.GOOGLE_SPREADSHEET_ID_COUNTRY_US;
+    const SHEET_ID_KR = process.env.GOOGLE_SPREADSHEET_ID_COUNTRY_KR;
+
     const { country, searchType, keyword } = req.body;
 
     // Validate required parameters
     if (!keyword) {
-      return res.status(400).json({
-        message: "Missing required parameter: keyword.",
-      });
+      return res.status(400).json({ message: "Missing required parameter: keyword." });
     }
     if (!searchType) {
-      return res.status(400).json({
-        message: "Missing required parameter: searchType.",
-      });
+      return res.status(400).json({ message: "Missing required parameter: searchType." });
+    }
+    if (!country) {
+      return res.status(400).json({ message: "Missing required parameter: country." });
     }
 
-    // Initialize Google Sheets API client using service account credentials.
-    // The credentials are expected to be stored in the environment variable as a Base64 encoded string.
-    const serviceAccountKey = Buffer
-      .from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64')
-      .toString('utf-8');
+
+    // Determine Spreadsheet ID based on country
+    let spreadsheetId;
+    switch (country) {
+      case 'cn':
+        spreadsheetId = SHEET_ID_CN;
+        break;
+      case 'us':
+        spreadsheetId = SHEET_ID_US;
+        break;
+      case 'kr':
+        spreadsheetId = SHEET_ID_KR;
+        break;
+      default:
+        return res.status(400).json({ error: 'Spreadsheet not found for this country.' });
+    }
+
+    // Initialize Google Sheets API client
+    const serviceAccountKey = JSON.parse(Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8')); // Parse JSON
 
     const auth = new google.auth.GoogleAuth({
-      credentials: JSON.parse(serviceAccountKey),
+      credentials: serviceAccountKey,
       scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
     });
 
     const authClient = await auth.getClient();
-    const sheets = google.sheets({ version: 'v4', auth: authClient });
+    const sheets = google.sheets({ version: 'v4', auth: authClient });  // Corrected: No ss.getActiveSheet here
 
-    // Spreadsheet configuration
-    const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
     const range = 'Sheet1!A1:Z1000'; // Adjust the range as needed
 
     // Retrieve data from the spreadsheet
@@ -56,37 +60,27 @@ export const searchSheets = async (req, res) => {
       return res.status(404).json({ message: 'No data found in the spreadsheet.' });
     }
 
-    // Assume the first row contains headers: name, mobile, idCard
     const headers = rows[0];
 
-    // Determine which column to search based on the provided searchType
-    let columnIndex;
-    if (searchType === 'name') {
-      columnIndex = headers.indexOf('name');
-    } else if (searchType === 'mobile') {
-      columnIndex = headers.indexOf('mobile');
-    } else if (searchType === 'idCard') {
-      columnIndex = headers.indexOf('idCard');
-    } else {
-      return res.status(400).json({ message: "Invalid searchType provided." });
-    }
+    // Determine column index based on searchType
+    const columnIndex = headers.indexOf(searchType); // Simplified
 
     if (columnIndex === -1) {
-      return res.status(500).json({ message: `Spreadsheet is missing the required header for ${searchType}.` });
+      return res.status(400).json({ message: `Spreadsheet is missing the required header for ${searchType}.` }); // 400 Bad Request
     }
 
-    // Filter rows: search in the specified column using case-insensitive matching with the provided keyword.
     const filteredResults = rows.slice(1).filter((row) => {
       const cellValue = row[columnIndex] || '';
       return cellValue.toLowerCase().includes(keyword.toLowerCase());
     });
 
     return res.status(200).json({ data: filteredResults });
+
   } catch (error) {
     console.error("Error searching spreadsheet:", error);
     return res.status(500).json({
       message: "Error searching spreadsheet",
-      error: error.message,
+      error: error.message,  // Include the error message for debugging
     });
   }
 };
