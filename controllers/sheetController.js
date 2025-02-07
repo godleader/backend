@@ -62,7 +62,7 @@ export const searchSheets = async (req, res) => {
     // Determine which column to search based on the provided searchType
     let columnIndex;
     if (searchType === 'name') {
-      columnIndex = headers.indexOf('name');s
+      columnIndex = headers.indexOf('name');
     } else if (searchType === 'mobile') {
       columnIndex = headers.indexOf('mobile');
     } else if (searchType === 'idCard') {
