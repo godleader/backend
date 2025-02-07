@@ -13,12 +13,12 @@ import { google } from 'googleapis';
 export const searchSheets = async (req, res) => {
   try {
     // Extract payload variables; currently only `name` is used for filtering.
-    const { country, searchType, name } = req.body;
+    const { country, searchType, keyword } = req.body;
 
     // Validate the required parameter `name`
-    if (!name) {
+    if (!keyword) {
       return res.status(400).json({
-        message: "Missing required parameter: name.",
+        message: "Missing required parameter: keyword.",
       });
     }
 
