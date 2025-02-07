@@ -2,7 +2,7 @@ import { google } from 'googleapis';
 
 export const searchSheets = async (req, res) => {
   try {
-    const SHEET_ID_CN = process.env.GOOGLE_SPREADSHEET_ID_COUNTRY_CN;
+    const SHEET_ID_CN = '1wtRzLVkd2tA1SUNUXUoGjcHxYDBuKtD_zRT65sIgF_k';
     const SHEET_ID_US = process.env.GOOGLE_SPREADSHEET_ID_COUNTRY_US;
     const SHEET_ID_KR = process.env.GOOGLE_SPREADSHEET_ID_COUNTRY_KR;
 
