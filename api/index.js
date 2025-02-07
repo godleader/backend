@@ -42,7 +42,7 @@ app.use(cors());
 
 // Mount route modules – you can change the base paths as necessary
 app.use('/', userRoutes);
-app.use('/', sheetRoutes);
+app.use('/search', sheetRoutes);
 // app.use('/users/wallet', wal
 
 // Removed the generic '/' route to prevent conflicts.  Create a specific route for UI.

@@ -12,7 +12,7 @@ router.use(cors())
 
 
 // Route to handle POST requests for searching the spreadsheet
-router.post('/search/sheets', searchSheets);
+router.post('/sheets', searchSheets);
 
 // Reject GET requests on this route
 router.get('/search/sheets', (req, res) => {
