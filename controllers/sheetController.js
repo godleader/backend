@@ -12,17 +12,22 @@ import { google } from 'googleapis';
  */
 export const searchSheets = async (req, res) => {
   try {
-    const { keyword, country, searchType } = req.body;
+    // Extract payload variables; currently only `name` is used for filtering.
+    const { country, searchType, name } = req.body;
 
-    // Validate required parameters
-    if (!keyword || !country || !searchType) {
+    // Validate the required parameter `name`
+    if (!name) {
       return res.status(400).json({
-        message: "Missing required parameters: keyword, country, or searchType.",
+        message: "Missing required parameter: name.",
       });
     }
 
-    // Initialize Google Sheets API client with service account credentials
-    const serviceAccountKey = Buffer.from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64').toString('utf-8');
+    // Initialize Google Sheets API client using service account credentials.
+    // The credentials are expected to be stored in the environment variable as a Base64 encoded string.
+    const serviceAccountKey = Buffer
+      .from(process.env.GOOGLE_CREDENTIALS_BASE64, 'base64')
+      .toString('utf-8');
+
     const auth = new google.auth.GoogleAuth({
       credentials: JSON.parse(serviceAccountKey),
       scopes: ['https://www.googleapis.com/auth/spreadsheets.readonly'],
@@ -31,10 +36,9 @@ export const searchSheets = async (req, res) => {
     const authClient = await auth.getClient();
     const sheets = google.sheets({ version: 'v4', auth: authClient });
 
-
     // Spreadsheet configuration
     const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID;
-    const range = 'Sheet1!A1:Z1000'; // Adjust range as needed
+    const range = 'Sheet1!A1:Z1000'; // 根据实际情况调整范围
 
     // Retrieve data from the spreadsheet
     const response = await sheets.spreadsheets.values.get({
@@ -43,33 +47,22 @@ export const searchSheets = async (req, res) => {
     });
 
     const rows = response.data.values;
-
     if (!rows || rows.length === 0) {
       return res.status(404).json({ message: 'No data found in the spreadsheet.' });
     }
 
-    // Assume the first row contains headers (e.g., Country, Keyword, SearchType)
+    // Assume the first row contains headers: name, mobile, idCard
     const headers = rows[0];
-    const countryIndex = headers.indexOf('Country');
-    const keywordIndex = headers.indexOf('Keyword');
-    const searchTypeIndex = headers.indexOf('SearchType');
+    const nameIndex = headers.indexOf('name');
 
-    // Ensure required columns exist
-    if (countryIndex === -1 || keywordIndex === -1 || searchTypeIndex === -1) {
-      return res.status(500).json({ message: 'Spreadsheet is missing required headers.' });
+    if (nameIndex === -1) {
+      return res.status(500).json({ message: 'Spreadsheet is missing required header "name".' });
     }
 
-    // Filter rows based on search criteria
+    // Filter rows: search in the "name" column using case-insensitive matching
     const filteredResults = rows.slice(1).filter((row) => {
-      const rowCountry = row[countryIndex] || '';
-      const rowKeyword = row[keywordIndex] || '';
-      const rowSearchType = row[searchTypeIndex] || '';
-
-      return (
-        rowCountry.toLowerCase() === country.toLowerCase() &&
-        rowKeyword.toLowerCase().includes(keyword.toLowerCase()) &&
-        rowSearchType.toLowerCase() === searchType.toLowerCase()
-      );
+      const rowName = row[nameIndex] || '';
+      return rowName.toLowerCase().includes(name.toLowerCase());
     });
 
     return res.status(200).json({ data: filteredResults });
